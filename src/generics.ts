@@ -21,5 +21,5 @@ export function getGenericArgString(schema: FieldSchema[]): string {
 export function getGenericArgStringWithDefault(schema: FieldSchema[]): string {
   const argList = getGenericArgList(schema)
   if (argList.length === 0) return ""
-  return `<${argList.map((name) => `${name} = unknown`).join(", ")}>`
+  return `${argList.map((name) => `${name} = unknown`).join(", ")}`
 }

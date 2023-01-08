@@ -58,6 +58,7 @@ const pbSchemaTypescriptMap = {
 export function generate(results: Array<CollectionRecord>) {
   const collectionNames: Array<string> = []
   const recordTypes: Array<string> = []
+  const expandEnums: Array<string> = []
   const responseTypes: Array<string> = [RESPONSE_TYPE_COMMENT]
 
   results
@@ -75,6 +76,23 @@ export function generate(results: Array<CollectionRecord>) {
       if (row.schema) {
         recordTypes.push(createRecordType(row.name, row.schema))
         responseTypes.push(createResponseType(row))
+        const expandCollections = row.schema
+          .filter((fieldSchema) => fieldSchema.type === "relation")
+          .reduce((acc, fieldSchema) => {
+            if (fieldSchema.options.collectionId) {
+              acc.push({
+                key:
+                  results.find(
+                    (result) => result.id === fieldSchema.options.collectionId
+                  )?.name || "",
+                value: fieldSchema.name,
+              })
+            }
+            return acc
+          }, [] as Array<{ key: string; value: string }>)
+        if (expandCollections.length) {
+          expandEnums.push(createCollectionEnums(row.name, expandCollections))
+        }
       }
     })
   const sortedCollectionNames = collectionNames
@@ -87,6 +105,7 @@ export function generate(results: Array<CollectionRecord>) {
     AUTH_SYSTEM_FIELDS_DEFINITION,
     RECORD_TYPE_COMMENT,
     ...recordTypes,
+    expandEnums.join("\n"),
     responseTypes.join("\n"),
     createCollectionRecords(sortedCollectionNames),
   ]
@@ -99,6 +118,21 @@ export function createCollectionEnum(collectionNames: Array<string>) {
     .map((name) => `\t${toPascalCase(name)} = "${name}",`)
     .join("\n")
   const typeString = `export enum Collections {
+${collections}
+}`
+  return typeString
+}
+
+export function createCollectionEnums(
+  collectionName: string,
+  collectionNames: Array<{ key: string; value: string }>
+) {
+  const collections = collectionNames
+    .map((name) => `\t${toPascalCase(name.key)} = "${name.value}",`)
+    .join("\n")
+  const typeString = `export enum ${toPascalCase(
+    collectionName
+  )}ExpandCollections {
 ${collections}
 }`
   return typeString
@@ -124,7 +158,9 @@ export function createRecordType(
     .map((fieldSchema: FieldSchema) => createTypeField(name, fieldSchema))
     .join("\n")
 
-  return `${selectOptionEnums}export type ${typeName}Record${genericArgs} = {
+  return `${selectOptionEnums}export type ${typeName}Record${
+    genericArgs ? `<${genericArgs}>` : ""
+  } = {
 ${fields}
 }`
 }
@@ -136,7 +172,19 @@ export function createResponseType(collectionSchemaEntry: CollectionRecord) {
   const genericArgs = getGenericArgString(schema)
   const systemFields = getSystemFields(type)
 
-  return `export type ${pascaleName}Response${genericArgsWithDefaults} = ${pascaleName}Record${genericArgs} & ${systemFields}`
+  const hasExpandableFields = schema.some(
+    (fieldSchema) => fieldSchema.type === "relation"
+  )
+
+  return `export type ${pascaleName}Response${
+    (hasExpandableFields || genericArgsWithDefaults) &&
+    `<${
+      hasExpandableFields &&
+      `T extends Partial<{[key in ${pascaleName}ExpandCollections]: unknown;}>, `
+    } ${genericArgsWithDefaults}>`
+  } = ${pascaleName}Record${genericArgs} & ${systemFields} ${
+    hasExpandableFields ? "& {expand?: T}" : ""
+  }`
 }
 
 export function createTypeField(

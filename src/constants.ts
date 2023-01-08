@@ -16,7 +16,6 @@ export type BaseSystemFields = {
 \tupdated: ${DATE_STRING_TYPE_NAME}
 \tcollectionId: string
 \tcollectionName: Collections
-\texpand?: { [key: string]: any }
 }`
 
 export const AUTH_SYSTEM_FIELDS_DEFINITION = `export type AuthSystemFields = {
