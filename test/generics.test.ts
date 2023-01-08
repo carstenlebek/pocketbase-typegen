@@ -58,20 +58,20 @@ describe("getGenericArgStringWithDefault", () => {
 
   it("returns a single generic string", () => {
     expect(getGenericArgStringWithDefault([textField, jsonField1])).toEqual(
-      "<Tdata1 = unknown>"
+      "Tdata1 = unknown"
     )
   })
 
   it("multiple generics with a record", () => {
     expect(
       getGenericArgStringWithDefault([textField, jsonField1, jsonField2])
-    ).toEqual("<Tdata1 = unknown, Tdata2 = unknown>")
+    ).toEqual("Tdata1 = unknown, Tdata2 = unknown")
   })
 
   it("sorts the arguments", () => {
     expect(
       getGenericArgStringWithDefault([textField, jsonField2, jsonField1])
-    ).toEqual("<Tdata1 = unknown, Tdata2 = unknown>")
+    ).toEqual("Tdata1 = unknown, Tdata2 = unknown")
   })
 })
 

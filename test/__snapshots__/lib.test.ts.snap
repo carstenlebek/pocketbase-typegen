@@ -26,7 +26,7 @@ exports[`createRecordType handles file fields with multiple files 1`] = `
 }"
 `;
 
-exports[`createResponseType creates type definition for a response 1`] = `"export type BooksResponse = BooksRecord & BaseSystemFields"`;
+exports[`createResponseType creates type definition for a response 1`] = `"export type BooksResponse = BooksRecord & BaseSystemFields "`;
 
 exports[`createResponseType handles file fields with multiple files 1`] = `
 "export type BooksRecord = {
@@ -64,7 +64,6 @@ export type BaseSystemFields = {
 	updated: IsoDateString
 	collectionId: string
 	collectionName: Collections
-	expand?: { [key: string]: any }
 }
 
 export type AuthSystemFields = {
@@ -80,8 +79,10 @@ export type BooksRecord = {
 	title?: string
 }
 
+
+
 // Response types include system fields and match responses from the PocketBase API
-export type BooksResponse = BooksRecord & BaseSystemFields
+export type BooksResponse = BooksRecord & BaseSystemFields 
 
 export type CollectionRecords = {
 	books: BooksRecord

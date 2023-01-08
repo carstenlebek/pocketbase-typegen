@@ -24,7 +24,6 @@ export type BaseSystemFields = {
 	updated: IsoDateString
 	collectionId: string
 	collectionName: Collections
-	expand?: { [key: string]: any }
 }
 
 export type AuthSystemFields = {
@@ -82,12 +81,18 @@ export type UsersRecord = {
 	avatar?: string
 }
 
+export enum EverythingExpandCollections {
+	Users = "user_relation_field",
+	CustomAuth = "custom_relation_field",
+	Posts = "post_relation_field",
+}
+
 // Response types include system fields and match responses from the PocketBase API
-export type BaseResponse = BaseRecord & BaseSystemFields
-export type CustomAuthResponse = CustomAuthRecord & AuthSystemFields
-export type EverythingResponse<Tanother_json_field = unknown, Tjson_field = unknown> = EverythingRecord<Tanother_json_field, Tjson_field> & BaseSystemFields
-export type PostsResponse = PostsRecord & BaseSystemFields
-export type UsersResponse = UsersRecord & AuthSystemFields
+export type BaseResponse = BaseRecord & BaseSystemFields 
+export type CustomAuthResponse = CustomAuthRecord & AuthSystemFields 
+export type EverythingResponse<T extends Partial<{[key in EverythingExpandCollections]: unknown;}>,  Tanother_json_field = unknown, Tjson_field = unknown> = EverythingRecord<Tanother_json_field, Tjson_field> & BaseSystemFields & {expand?: T}
+export type PostsResponse = PostsRecord & BaseSystemFields 
+export type UsersResponse = UsersRecord & AuthSystemFields 
 
 export type CollectionRecords = {
 	base: BaseRecord
