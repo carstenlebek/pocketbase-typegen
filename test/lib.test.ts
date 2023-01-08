@@ -125,7 +125,7 @@ describe("createResponseType", () => {
       ],
     }
 
-    const result = createResponseType(row)
+    const result = createResponseType(row, [row])
     expect(result).toMatchSnapshot()
   })
 
