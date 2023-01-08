@@ -74,7 +74,7 @@ export function generate(results: Array<CollectionRecord>) {
       if (row.name) collectionNames.push(row.name)
       if (row.schema) {
         recordTypes.push(createRecordType(row.name, row.schema))
-        responseTypes.push(createResponseType(row))
+        responseTypes.push(createResponseType(row, results))
       }
     })
   const sortedCollectionNames = collectionNames
@@ -129,14 +129,37 @@ ${fields}
 }`
 }
 
-export function createResponseType(collectionSchemaEntry: CollectionRecord) {
+export function createResponseType(
+  collectionSchemaEntry: CollectionRecord,
+  collectionSchema: CollectionRecord[]
+) {
   const { name, schema, type } = collectionSchemaEntry
   const pascaleName = toPascalCase(name)
   const genericArgsWithDefaults = getGenericArgStringWithDefault(schema)
   const genericArgs = getGenericArgString(schema)
   const systemFields = getSystemFields(type)
 
-  return `export type ${pascaleName}Response${genericArgsWithDefaults} = ${pascaleName}Record${genericArgs} & ${systemFields}`
+  const expandFields = schema
+    .filter((fieldSchema: FieldSchema) => fieldSchema.type === "relation")
+    .map((fieldSchema: FieldSchema) => {
+      const expandCollectionName = collectionSchema.find(
+        (collectionSchemaEntry) =>
+          collectionSchemaEntry.id === fieldSchema.options.collectionId
+      )?.name
+      if (!expandCollectionName) {
+        throw new Error(
+          `could not find collection with id ${fieldSchema.options.collectionId}`
+        )
+      }
+      const pascaleName = toPascalCase(expandCollectionName)
+      return createExpandField(pascaleName, fieldSchema, genericArgs)
+    })
+
+  return `export type ${pascaleName}Response${genericArgsWithDefaults} = ${pascaleName}Record${genericArgs} & ${systemFields} ${
+    expandFields.length > 0
+      ? `& {\n\texpand?: {\n${expandFields.join("\n")}\n\t}\n}`
+      : ""
+  }`
 }
 
 export function createTypeField(
@@ -160,6 +183,22 @@ export function createTypeField(
   const required = fieldSchema.required ? "" : "?"
 
   return `\t${fieldName}${required}: ${typeString}`
+}
+
+export function createExpandField(
+  pascaleName: string,
+  fieldSchema: FieldSchema,
+  genericArgs: string
+) {
+  const fieldName = sanitizeFieldName(fieldSchema.name)
+  const required = fieldSchema.required ? "" : "?"
+
+  const typeString =
+    fieldSchema.options.maxSelect && fieldSchema.options.maxSelect === 1
+      ? `${pascaleName}Response${genericArgs}`
+      : `Array<${pascaleName}Response${genericArgs}>`
+
+  return `\t\t${fieldName}${required}: ${typeString}`
 }
 
 export function createSelectOptions(
