@@ -40,6 +40,18 @@ export type CollectionRecord = {
   updateRule: string | null
   deleteRule: string | null
   schema: Array<FieldSchema>
+  options?: CollectionOptions
+}
+
+export type CollectionOptions = {
+  allowEmailAuth?: boolean
+  allowOAuth2Auth?: boolean
+  allowUsernameAuth?: boolean
+  exceptEmailDomains?: string[] | null
+  manageRule?: string | null
+  minPasswordLength?: number
+  onlyEmailDomains?: string[] | null
+  requireEmail?: boolean
 }
 
 // Every field is optional
@@ -48,5 +60,15 @@ export type RecordOptions = {
   min?: number | null
   max?: number | null
   pattern?: string
-  values?: string[]
+  values?: string[] | null
+  collectionId?: string
+  cascadeDelete?: boolean
+  allowEmailAuth?: boolean
+  allowOAuth2Auth?: boolean
+  allowUsernameAuth?: boolean
+  exceptEmailDomains?: string[] | null
+  manageRule?: any
+  minPasswordLength?: number
+  onlyEmailDomains?: string[] | null
+  requireEmail?: boolean
 }
