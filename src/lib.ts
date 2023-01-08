@@ -142,17 +142,24 @@ export function createResponseType(
   const expandFields = schema
     .filter((fieldSchema: FieldSchema) => fieldSchema.type === "relation")
     .map((fieldSchema: FieldSchema) => {
-      const expandCollectionName = collectionSchema.find(
+      const expandCollection = collectionSchema.find(
         (collectionSchemaEntry) =>
           collectionSchemaEntry.id === fieldSchema.options.collectionId
-      )?.name
-      if (!expandCollectionName) {
+      )
+      if (!expandCollection) {
         throw new Error(
           `could not find collection with id ${fieldSchema.options.collectionId}`
         )
       }
-      const pascaleName = toPascalCase(expandCollectionName)
-      return createExpandField(pascaleName, fieldSchema, genericArgs)
+      const { name, schema } = expandCollection
+      const pascaleName = toPascalCase(name)
+      const genericArgsWithDefaults = getGenericArgStringWithDefault(schema)
+
+      return createExpandField(
+        pascaleName,
+        fieldSchema,
+        genericArgsWithDefaults
+      )
     })
 
   return `export type ${pascaleName}Response${genericArgsWithDefaults} = ${pascaleName}Record${genericArgs} & ${systemFields} ${
@@ -188,15 +195,15 @@ export function createTypeField(
 export function createExpandField(
   pascaleName: string,
   fieldSchema: FieldSchema,
-  genericArgs: string
+  genericArgsWithDefaults: string
 ) {
   const fieldName = sanitizeFieldName(fieldSchema.name)
   const required = fieldSchema.required ? "" : "?"
 
   const typeString =
     fieldSchema.options.maxSelect && fieldSchema.options.maxSelect === 1
-      ? `${pascaleName}Response${genericArgs}`
-      : `Array<${pascaleName}Response${genericArgs}>`
+      ? `${pascaleName}Response${genericArgsWithDefaults}`
+      : `Array<${pascaleName}Response${genericArgsWithDefaults}>`
 
   return `\t\t${fieldName}${required}: ${typeString}`
 }
